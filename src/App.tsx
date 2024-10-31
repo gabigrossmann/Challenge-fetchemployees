@@ -1,44 +1,49 @@
-import { useState } from "react";
-import EmployeeCard from "./components/EmployeeCard";
-import './App.css';
+// src/App.jsx
+
+import { useEffect, useState } from 'react';
+
 interface Employee {
-	firstName: string;
-	lastName: string;
-	photo: string;
-	email: string;
+  name: {
+    first: string;
+    last: string;
+  };
+  email: string;
+  picture: {
+    medium: string; // ou 'large', dependendo do que você estiver usando
+  };
 }
 
-function App() {
-	const [employee, setEmployee] = useState<Employee | null>(null);
-
-	const fetchEmployee = async () => {
-		try {
-			const response = await fetch("https://randomuser.me/api?nat=en");
-			const data = await response.json();
-			const user = data.results[0];
-
-			const newEmployee: Employee = {
-				firstName: user.name.first,
-				lastName: user.name.last,
-				photo: user.picture.large,
-				email: user.email,
-			};
-
-			setEmployee(newEmployee);
-		} catch (error) {
-			console.error("Error fetching data:", error);
-		}
-	};
-
-	return (
-		<div>
-			<h1>Employee Information</h1>
-			<button type="button" onClick={fetchEmployee}>
-				Upload New Profile
-			</button>
-			{employee && <EmployeeCard {...employee} />}
-		</div>
-	);
+interface EmployeeResponse {
+  results: Employee[];
 }
+
+const App = () => {
+  const [employeeData, setEmployeeData] = useState<EmployeeResponse | null>(null);
+
+  useEffect(() => {
+    fetch("http://localhost:3310/api/employees")
+      .then(response => response.json())
+      .then(data => {
+        console.log(data); // Para verificar a resposta
+        setEmployeeData(data); // Armazena os dados no estado
+      })
+      .catch(error => console.error("Erro ao buscar dados:", error));
+  }, []); // [] significa que o efeito será executado apenas uma vez, quando o componente for montado.
+
+  return (
+    <div>
+      <h1>Dados do Funcionário</h1>
+      {employeeData ? (
+        <div>
+          <p>Nome: {employeeData.results[0].name.first} {employeeData.results[0].name.last}</p>
+          <p>Email: {employeeData.results[0].email}</p>
+          <img src={employeeData.results[0].picture.medium} alt="Employee" />
+        </div>
+      ) : (
+        <p>Carregando...</p>
+      )}
+    </div>
+  );
+};
 
 export default App;
